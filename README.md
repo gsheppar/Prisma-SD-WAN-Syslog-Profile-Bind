@@ -1,5 +1,5 @@
 # Prisma SD-WAN Syslog Update (Preview)
-The purpose of this script is to bind a syslog profile (already created) to every ION
+The purpose of this script is to bind a syslog profile (already created) to every ION in a domain
 
     syslog_profile = "Demo-Syslog"
     domain = "US-East"
