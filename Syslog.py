@@ -49,7 +49,7 @@ except ImportError:
     CLOUDGENIX_USER = None
     CLOUDGENIX_PASSWORD = None
 
-def update(cgx, syslog_profile):
+def update(cgx, syslog_profile, domain):
     syslog_profile_id = None
     for profile in cgx.get.syslogserverprofiles().cgx_content['items']:
         if profile["name"] == syslog_profile:
@@ -58,35 +58,45 @@ def update(cgx, syslog_profile):
     if not syslog_profile_id:
         print("No syslog profile named " + syslog_profile + " found")
         return
+        
+    domain_id = None
+    for binding in cgx.get.servicebindingmaps().cgx_content["items"]:
+        if binding["name"] == domain:
+            domain_id = binding["id"]
+    
+    if not domain_id:
+        print("No domain named " + domain + " found")
+        return
     
     elem_resp = cgx.get.elements()
     elem_list = elem_resp.cgx_content.get('items', None)
     
     for site in cgx.get.sites().cgx_content['items']:
-        for element in cgx.get.elements().cgx_content['items']:
-            elem_id = element['id']
-            name = element['name']
-            sid = element['site_id']
-            model_name = element['model_name']
-            if element['site_id'] == site["id"]:
-                if name == None:
-                    name = "Unamed device"
-                resp = cgx.get.syslogservers(site_id=sid,element_id=elem_id)
-                item_list = resp.cgx_content.get('items', None)
-                syslog_found = False
-                for syslog_data in item_list:
-                    if syslog_data['syslog_profile_id'] == syslog_profile_id:
-                        syslog_found = True
-                if not syslog_found:
-                    data = {"enabled":True,"name":syslog_profile,"description":None,"tags":None,"syslog_profile_id":syslog_profile_id,"source_interface":None,"enable_flow_logging":None,"severity_level":None,"protocol":None,"server_ip":None,"server_fqdn":None,"server_port":None,"remote_ca_certificate":None}
-                    resp = cgx.post.syslogservers(site_id=sid, element_id=elem_id, data=data)
-                    if not resp:
-                        print("Error create Syslog " + syslog_profile +" on " + name)
-                        print(str(jdout(resp)))
-                        return
-                    print("Creating Syslog " + syslog_profile +" on " + name)
-                else:
-                    print("Syslog " + syslog_profile + " on " + name + " already updated")
+        if site["service_binding"] == domain_id:
+            for element in cgx.get.elements().cgx_content['items']:
+                elem_id = element['id']
+                name = element['name']
+                sid = element['site_id']
+                model_name = element['model_name']
+                if element['site_id'] == site["id"]:
+                    if name == None:
+                        name = "Unamed device"
+                    resp = cgx.get.syslogservers(site_id=sid,element_id=elem_id)
+                    item_list = resp.cgx_content.get('items', None)
+                    syslog_found = False
+                    for syslog_data in item_list:
+                        if syslog_data['syslog_profile_id'] == syslog_profile_id:
+                            syslog_found = True
+                    if not syslog_found:
+                        data = {"enabled":True,"name":syslog_profile,"description":None,"tags":None,"syslog_profile_id":syslog_profile_id,"source_interface":None,"enable_flow_logging":None,"severity_level":None,"protocol":None,"server_ip":None,"server_fqdn":None,"server_port":None,"remote_ca_certificate":None}
+                        resp = cgx.post.syslogservers(site_id=sid, element_id=elem_id, data=data)
+                        if not resp:
+                            print("Error creating Syslog " + syslog_profile +" on " + name)
+                            print(str(jdout(resp)))
+                            return
+                        print("Creating Syslog " + syslog_profile +" on " + name)
+                    else:
+                        print("Syslog " + syslog_profile + " on " + name + " already updated")
     return
                                  
 def go():
@@ -180,8 +190,9 @@ def go():
     tenant_str = "".join(x for x in cgx_session.tenant_name if x.isalnum()).lower()
     cgx = cgx_session
     syslog_profile = "Demo Server"
+    domain = "US-East"
     
-    update(cgx, syslog_profile) 
+    update(cgx, syslog_profile, domain) 
     # end of script, run logout to clear session.
     print("End of script. Logout!")
     cgx_session.get.logout()

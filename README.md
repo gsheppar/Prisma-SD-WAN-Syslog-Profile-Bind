@@ -1,8 +1,8 @@
 # Prisma SD-WAN Syslog Update (Preview)
 The purpose of this script is to bind a syslog profile (already created) to every ION
 
-Update line 182 with your syslog profile name
-syslog_profile = "Demo Server"
+    syslog_profile = "Demo-Syslog"
+    domain = "US-East"
 
 #### License
 MIT
@@ -19,7 +19,9 @@ MIT
 ### Examples of usage:
  Please generate your API token and add it to cloudgenix_settings.py
  
- Update line 182 with your syslog profile name
+ Update line 192/193
+    syslog_profile = "Demo-Syslog"
+    domain = "US-East"
  
  1. ./Syslog.py
       - Will search every Site ION and update a Syslog entry if it finds a name match.
